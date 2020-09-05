@@ -1,5 +1,8 @@
 cache
 artifacts
+coverage
+coverage.json
+
 
 # Created by .ignore support plugin (hsz.mobi)
 ### VisualStudioCode template

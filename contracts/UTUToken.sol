@@ -16,21 +16,17 @@ import "@openzeppelin/contracts/math/Math.sol";
  */
 contract UTUToken is ERC20Capped, Ownable, AccessControl {
 	using SafeERC20 for ERC20;
+	using SafeMath for uint256;
+
 	// Events used for logging
 	bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 	bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
 	bytes32 public constant RECOVERY_ROLE = keccak256("RECOVERY_ROLE");
 
-	bool public initialized = false;
+	mapping(bytes32 => mapping(address => uint256)) public roleAssigned;
 
-	// Gets called before any token transfer
-	function _beforeTokenTransfer(address _from, address _to, uint256 _amount)
-		internal
-		virtual
-		override
-	{
-		super._beforeTokenTransfer(_from, _to, _amount);
-	}
+	uint256 public activationDelay = 2 days;
+	bool isMigrating;
 
 	/**
 	 * Create a new Token contract.
@@ -58,6 +54,7 @@ contract UTUToken is ERC20Capped, Ownable, AccessControl {
 	 */
 	function setupMinter(address _who) public onlyOwner {
 		_setupRole(MINTER_ROLE, _who);
+		roleAssigned[MINTER_ROLE][_who] = now;
 	}
 
 	/**
@@ -66,6 +63,7 @@ contract UTUToken is ERC20Capped, Ownable, AccessControl {
 	 */
 	function setupBurner(address _who) public onlyOwner {
 		_setupRole(BURNER_ROLE, _who);
+		roleAssigned[BURNER_ROLE][_who] = now;
 	}
 
 	/**
@@ -74,6 +72,7 @@ contract UTUToken is ERC20Capped, Ownable, AccessControl {
 	 */
 	function setupRecovery(address _who) public onlyOwner {
 		_setupRole(RECOVERY_ROLE, _who);
+		roleAssigned[RECOVERY_ROLE][_who] = now;
 	}
 
 	// TODO: Maybe add a boolean to disable minting after migration has started?
@@ -83,18 +82,28 @@ contract UTUToken is ERC20Capped, Ownable, AccessControl {
 	 * @param amount uint256 amount of tokens to mint.
 	 */
 	function mint(address to, uint256 amount) public {
+		require(!isMigrating, "cannot mint while migrating");
 		require(hasRole(MINTER_ROLE, msg.sender), "Caller not a minter");
+		require(active(MINTER_ROLE), "time lock active");
 		_mint(to, amount);
 	}
 
 	/**
 	 * @dev Burn tokens belonging to the caller.
-	 * @param from address Address which is going to have its tokens burnt.
 	 * @param amount uint256 amount of tokens to burn.
 	 */
 	function burn(uint256 amount) public {
 		require(hasRole(BURNER_ROLE, msg.sender), "Caller not a burner");
+		require(active(BURNER_ROLE), "time lock active");
 		_burn(msg.sender, amount);
+	}
+
+
+	/**
+	 * @dev Starting the migration process means that no new tokens can be minted.
+	 */
+	function startMigration() public onlyOwner {
+		isMigrating = true;
 	}
 
 	/**
@@ -107,6 +116,7 @@ contract UTUToken is ERC20Capped, Ownable, AccessControl {
 		external
 	{
 		require(hasRole(RECOVERY_ROLE, msg.sender), "Caller cannot recover");
+		require(active(RECOVERY_ROLE), "time lock active");
 		require(_to != address(0), "cannot recove to zero address");
 
 		if (_token == address(0)) { // Recover Eth
@@ -118,5 +128,14 @@ contract UTUToken is ERC20Capped, Ownable, AccessControl {
 			uint256 balance = _balance == 0 ? total : Math.min(total, _balance);
 			ERC20(_token).safeTransfer(_to, balance);
 		}
+	}
+
+	/**
+	 * @dev Check whether the msg.sender was assigned a role and has waited out
+	 * the activationDelay.
+	 */
+	function active(bytes32 _role) private view returns (bool) {
+		return roleAssigned[_role][msg.sender] > 0 && 
+			roleAssigned[_role][msg.sender] + activationDelay < now;
 	}
 }
