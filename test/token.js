@@ -1,5 +1,6 @@
 const { expect } = require("chai")
 const { ethers, config } = require("@nomiclabs/buidler")
+const { increaseTime } = require('./utils.js')
 
 describe("Token", function() {
 	beforeEach(async function() {
@@ -64,6 +65,28 @@ describe("Token", function() {
 		it("should allow only owner to set minter", async function() {
 			const notOwner = this.accounts[0]
 			await expect(this.contract.connect(notOwner).setupMinter(await this.accounts[1].getAddress())).to.be.revertedWith('Ownable: caller is not the owner')
+		})
+
+		it("should not allow burning before activation period", async function() {
+			const burner = this.accounts[0]
+			const burnerAddr = await burner.getAddress()
+			await this.contract.setupBurner(burnerAddr)
+			await expect(this.contract.connect(burner).burn(1)).to.be.revertedWith('time lock active')
+		})
+
+		it("should not allow minting before activation period", async function() {
+			const minter = this.accounts[0]
+			const minterAddr = await minter.getAddress()
+			await this.contract.setupMinter(minterAddr)
+			await expect(this.contract.connect(minter).mint(minterAddr, 1)).to.be.revertedWith('time lock active')
+		})
+
+		it("should allow minting after activation period", async function() {
+			const minter = this.accounts[0]
+			const minterAddr = await minter.getAddress()
+			await this.contract.setupMinter(minterAddr)
+			await increaseTime(2 * 24 * 60 * 60 + 1)
+			await this.contract.connect(minter).mint(minterAddr, 1)
 		})
 
 	})
