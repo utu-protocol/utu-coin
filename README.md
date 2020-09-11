@@ -1,5 +1,17 @@
 # UTU Token
 
+Run tests:
+
+```Bash
+$ npx buidler test
+```
+
+Generate coverage report:
+
+```Bash
+$ npx buidler coverage --network coverage
+```
+
 ## Tooling
 
 ```Bash

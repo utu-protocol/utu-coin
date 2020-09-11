@@ -6,7 +6,6 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20Capped.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/math/Math.sol";
 
@@ -18,7 +17,6 @@ contract UTUToken is ERC20Capped, Ownable, AccessControl {
 	using SafeERC20 for ERC20;
 	using SafeMath for uint256;
 
-	// Events used for logging
 	bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 	bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
 	bytes32 public constant RECOVERY_ROLE = keccak256("RECOVERY_ROLE");
@@ -26,7 +24,7 @@ contract UTUToken is ERC20Capped, Ownable, AccessControl {
 	mapping(bytes32 => mapping(address => uint256)) public roleAssigned;
 
 	uint256 public activationDelay = 2 days;
-	bool isMigrating;
+	bool public isMigrating;
 
 	/**
 	 * Create a new Token contract.
@@ -43,7 +41,7 @@ contract UTUToken is ERC20Capped, Ownable, AccessControl {
 		ERC20("UTU Token", "UTU")
 	{
 		require(_initialHolders.length == _initialBalances.length, "UTU: mismatching array lengths");
-		for (uint8 i = 0 ; i < _initialHolders.length; i++) {
+		for (uint32 i = 0 ; i < _initialHolders.length; i++) {
 			_mint(_initialHolders[i], _initialBalances[i]);
 		}
 	}
@@ -75,7 +73,6 @@ contract UTUToken is ERC20Capped, Ownable, AccessControl {
 		roleAssigned[RECOVERY_ROLE][_who] = now;
 	}
 
-	// TODO: Maybe add a boolean to disable minting after migration has started?
 	/**
 	 * @dev Mint new tokens and transfer them.
 	 * @param to address Recipient of newly minted tokens.
@@ -98,7 +95,6 @@ contract UTUToken is ERC20Capped, Ownable, AccessControl {
 		_burn(msg.sender, amount);
 	}
 
-
 	/**
 	 * @dev Starting the migration process means that no new tokens can be minted.
 	 */
@@ -108,16 +104,17 @@ contract UTUToken is ERC20Capped, Ownable, AccessControl {
 
 	/**
 	 * Recover tokens accidentally sent to the token contract.
-	 *  @param _token Address of the token to be recovered
-	 *  @param _to Recipient of the recovered tokens
-	 *  @param _balance Amount of tokens to be recovered
+	 *  @param _token address of the token to be recovered. 0x0 address will
+	 *                        recover ETH.
+	 *  @param _to address Recipient of the recovered tokens
+	 *  @param _balance uint256 Amount of tokens to be recovered
 	 */
 	function recoverTokens(address _token, address payable _to, uint256 _balance)
 		external
 	{
 		require(hasRole(RECOVERY_ROLE, msg.sender), "Caller cannot recover");
 		require(active(RECOVERY_ROLE), "time lock active");
-		require(_to != address(0), "cannot recove to zero address");
+		require(_to != address(0), "cannot recover to zero address");
 
 		if (_token == address(0)) { // Recover Eth
 			uint256 total = address(this).balance;
