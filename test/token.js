@@ -10,11 +10,10 @@ describe("Token", function() {
 		this.owner = accounts.pop()
 		this.accounts = accounts
 
-		this.cap = (ethers.BigNumber.from('1')).mul((ethers.BigNumber.from('10')).pow(ethers.BigNumber.from('9'))) // 1 * 10^6
+		this.cap = ethers.utils.parseEther("1000000000") // 1 * 10^9
 		this.factory = await ethers.getContractFactory("UTUToken")
 		this.contract = await this.factory.deploy(this.cap, [], [])
 		this.tokenMock = await deployMockContract(this.owner, IERC20.abi)
-		await this.contract.deployed()
 	})
 
 	context("Initialize", function() {
@@ -29,9 +28,31 @@ describe("Token", function() {
 			const balances = holders.map(h => { return 1 })
 			const supply = balances.reduce((a, c) => a + c)
 			const instance = await this.factory.deploy(this.cap, holders, balances)
-			await instance.deployed()
+			let tx = await instance.deployed()
 			expect(await instance.totalSupply()).to.equal(supply)
 		})
+
+		it("should deploy and mint tokens with mainnet allocations", async function() {
+			const holders = [
+				"0x792d584c18fF3bf2e5C790A09336E73ed008e722", // (Growth Round): 308,545,455
+				"0xDCF12A4479EB7502ac4256C31F94531Be875F54a", // (Ecosystem Growth Pool): 300,000,000
+				"0xc9e408B9A4327F92927906312D12f5018c2F379A", // (UTU Protocol): 300,000,000
+				"0x1cc2A96E6d8E25B60DDE8DDb4C7e28Af9021A905" // Uniswap 1,250,000
+			];
+
+			const balances = [
+				ethers.utils.parseEther("308545455"),
+				ethers.utils.parseEther("300000000"),
+				ethers.utils.parseEther("300000000"),
+				ethers.utils.parseEther("1250000")
+			];
+
+			const supply = balances.reduce((a, c) => a.add(c))
+			const instance = await this.factory.deploy(this.cap, holders, balances)
+			let tx = await instance.deployed()
+			expect(await instance.totalSupply()).to.equal(supply)
+		})
+
 
 		it("should fail to deploy with 0 cap", async function() {
 			await expect(this.factory.deploy(0, [], [])).to.be.reverted
