@@ -1,4 +1,8 @@
-# UTU Token
+# UTU Coin
+
+This repository has the ERC20 token contract for UTU Coin. 
+
+# Tests
 
 Run tests:
 
