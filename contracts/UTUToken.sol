@@ -38,7 +38,7 @@ contract UTUToken is ERC20Capped, Ownable, AccessControl {
 	)
 		public
 		ERC20Capped(_cap)
-		ERC20("UTU Token", "UTU")
+		ERC20("UTU Coin", "UTU")
 	{
 		require(_initialHolders.length == _initialBalances.length, "UTU: mismatching array lengths");
 		for (uint32 i = 0 ; i < _initialHolders.length; i++) {
