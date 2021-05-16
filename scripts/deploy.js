@@ -15,7 +15,7 @@ async function deploy() {
 
 	console.log(`Deploying`)
 	const tokenFactory = await ethers.getContractFactory("UTUToken", wallet);
-	const overrides = { gasPrice: 2, gasLimit: 8000000 }; // <- used this for Ropsten
+	const overrides = undefined; // { gasPrice: 2, gasLimit: 8000000 }; // <- used this for Ropsten
 	const token = await tokenFactory.deploy(cap, initialHolders, initialBalances);
 	await token.deployed();
 	console.log(`UTU token deployed at ${token.address}`);
