@@ -132,7 +132,7 @@ contract UTUToken is ERC20Capped, Ownable, AccessControl {
 	 * the activationDelay.
 	 */
 	function active(bytes32 _role) private view returns (bool) {
-		return roleAssigned[_role][msg.sender] > 0 &&
+		return roleAssigned[_role][msg.sender] > 0 && 
 			roleAssigned[_role][msg.sender] + activationDelay < now;
 	}
 }
