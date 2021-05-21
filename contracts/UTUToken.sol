@@ -96,6 +96,20 @@ contract UTUToken is ERC20Capped, Ownable, AccessControl {
 	}
 
 	/**
+     * @dev Destroys amount tokens from account, deducting from the caller’s allowance.
+     * @param account address account from which tokens are burned.
+     * @param amount uint256 amount of tokens to burn; the caller must have allowance for ``accounts``’s tokens of at
+      least amount.
+     */
+	function burnFrom(address account, uint256 amount) public {
+		require(hasRole(BURNER_ROLE, msg.sender), “Caller not a burner”);
+		require(active(BURNER_ROLE), “time lock active”);
+		uint256 decreasedAllowance = allowance(account, _msgSender()).sub(amount, “ERC20: burn amount exceeds allowance”);
+		_approve(account, _msgSender(), decreasedAllowance);
+		_burn(account, amount);
+	}
+
+	/**
 	 * @dev Starting the migration process means that no new tokens can be minted.
 	 */
 	function startMigration() public onlyOwner {
@@ -132,7 +146,7 @@ contract UTUToken is ERC20Capped, Ownable, AccessControl {
 	 * the activationDelay.
 	 */
 	function active(bytes32 _role) private view returns (bool) {
-		return roleAssigned[_role][msg.sender] > 0 && 
+		return roleAssigned[_role][msg.sender] > 0 &&
 			roleAssigned[_role][msg.sender] + activationDelay < now;
 	}
 }
