@@ -23,7 +23,7 @@ contract UTUToken is ERC20Capped, Ownable, AccessControl {
 
 	mapping(bytes32 => mapping(address => uint256)) public roleAssigned;
 
-	uint256 public activationDelay = 1 seconds;
+	uint256 public activationDelay = 2 days;
 	bool public isMigrating;
 
 	/**
