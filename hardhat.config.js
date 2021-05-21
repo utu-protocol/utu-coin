@@ -1,15 +1,15 @@
-usePlugin("@nomiclabs/buidler-waffle");
-usePlugin("buidler-gas-reporter");
-usePlugin("@nomiclabs/buidler-solhint");
-usePlugin("@nomiclabs/buidler-etherscan");
-usePlugin("@nomiclabs/buidler-ganache");
-usePlugin("solidity-coverage");
-usePlugin('buidler-contract-sizer');
+require("@nomiclabs/hardhat-waffle");
+require("hardhat-gas-reporter");
+require("@nomiclabs/hardhat-solhint");
+require("@nomiclabs/hardhat-etherscan");
+require("@nomiclabs/hardhat-ganache");
+require("solidity-coverage");
+require('hardhat-contract-sizer');
 
 // You have to export an object to set up your config
 // This object can have the following optional entries:
 // defaultNetwork, networks, solc, and paths.
-// Go to https://buidler.dev/config/ to learn more
+// Go to https://hardhat.dev/config/ to learn more
 module.exports = {
 	gasReporter: {
     enabled: (process.env.REPORT_GAS) ? true : false
@@ -23,6 +23,13 @@ module.exports = {
 		homestead: {
 			url: process.env.WEB3_API || "",
 		},
+		bsc_mainnet: {
+			url: "https://bsc-dataseed.binance.org"
+		},
+		bsc_testnet: {
+			// "--network bsc_testnet" didn't work when deploying; I used the default (homestead) instead and set WEB3_API
+			url: "https://data-seed-prebsc-1-s1.binance.org:8545"
+		},
 		coverage: {
 			url: 'http://localhost:8555'
 		}
@@ -31,7 +38,7 @@ module.exports = {
 		//defaultBalanceEther: 10
 		//}
 	},
-	solc: {
+	solidity: {
 		version: "0.6.12",
 	},
 };

@@ -23,7 +23,7 @@ contract UTUToken is ERC20Capped, Ownable, AccessControl {
 
 	mapping(bytes32 => mapping(address => uint256)) public roleAssigned;
 
-	uint256 public activationDelay = 2 days;
+	uint256 public activationDelay = 1 seconds;
 	bool public isMigrating;
 
 	/**
@@ -132,7 +132,7 @@ contract UTUToken is ERC20Capped, Ownable, AccessControl {
 	 * the activationDelay.
 	 */
 	function active(bytes32 _role) private view returns (bool) {
-		return roleAssigned[_role][msg.sender] > 0 && 
+		return roleAssigned[_role][msg.sender] > 0 &&
 			roleAssigned[_role][msg.sender] + activationDelay < now;
 	}
 }
